@@ -185,7 +185,7 @@ class AG:
         ponto2= random.randint(0, self.populacao.individuos[0].tamGenes)
         if ponto2>ponto1:
             ponto1, ponto2= ponto2,ponto1
-        mutacao= random.random()>0.78
+        mutacao= random.random()>0.60
         if mutacao:
             aux= []
             for j in range(ponto1-ponto2):
@@ -198,7 +198,7 @@ class AG:
         ponto2= random.randint(0, self.populacao.individuos[0].tamGenes)
         if ponto2>ponto1:
             ponto1,ponto2= ponto2,ponto1
-        mutacao= random.random()>0.78
+        mutacao= random.random()>0.60
         if mutacao:
             aux= []
             for j in range(ponto1-ponto2):
@@ -210,11 +210,11 @@ class AG:
     def mortalidade(self):
         velhos= self.populacao.getMaisVelhos()
         minimos= self.populacao.getMenosAdaptados()
-        if self.populacao.individuos[velhos[0]].idade > 15:
+        if self.populacao.individuos[velhos[0]].idade > 12:
             morto1= velhos[0]
         else:
             morto1= minimos[0]
-        if self.populacao.individuos[velhos[1]].idade > 15:
+        if self.populacao.individuos[velhos[1]].idade > 12:
             morto2= velhos[1]
         elif morto1 == minimos[0]:
             morto2= minimos[1]
@@ -237,8 +237,8 @@ demo.populacao.calculaAdaptacao()
 print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado)
 maior= demo.populacao.getMaisAdaptado().adaptacao
 genes= demo.populacao.getMaisAdaptado().genes
-for i in range(1500):
-#while demo.populacao.getMaisAdaptado().adaptacao < 0.0095 or demo.geracaoAtual < 100:
+#for i in range(1500):
+while demo.populacao.getMaisAdaptado().adaptacao < 0.0095 or demo.geracaoAtual < 1500:
     demo.geracaoAtual= demo.geracaoAtual+1
     demo.populacao.envelhece()
     demo.selecao()
@@ -246,7 +246,7 @@ for i in range(1500):
     demo.mutacao()
     demo.adicionaFilhosMaisAdaptados()
     demo.populacao.calculaAdaptacao()
-    print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado, "- Maior até agora: ", maior, "Menor custo:", 1/maior)
+    print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado, "- Maior até agora: ", maior)
     if demo.populacao.getMaisAdaptado().adaptacao > maior:
         maior= demo.populacao.getMaisAdaptado().adaptacao
         genes= demo.populacao.getMaisAdaptado().genes
@@ -259,4 +259,4 @@ print("Genes do mais adaptado: ")
 for i in range(demo.populacao.individuos[0].tamGenes):
     print(genes[i])
     
-    #9,5,6,8,0,1,4,7,2,3  -  0.0094
+    #8,2,3,9,4,1,6,0,5,7  -  0.01056... - 95.65
