@@ -3,8 +3,8 @@
 import math
 import random
 
-tamGenes= 10
-tamPopulacao= 2*tamGenes
+tamGenes= 0
+tamPopulacao= 0
 
 class Vertice:
     def __init__(self, nome:int, coords:tuple):
@@ -32,12 +32,11 @@ class Grafo:
     
     
 class Individuo:
-    def __init__(self):
+    def __init__(self, grafo):
         self.genes= []
         self.idade= 0
-        #for i in range(tamGenes):
-            #self.genes.append(Vertice(i, (random.random()*50, random.random()*50)))
-        self.genes= [Vertice(0, (13.799940281434441 ,  44.703335320869506)), Vertice(1, (4.929969173873872 ,  38.57085858780106)), Vertice(2, (13.272217821147253 ,  14.380034596293035)), Vertice(3, (12.886353710138925 ,  14.516591138225692)), Vertice(4, (4.637545238897739 ,  29.0476235222785)), Vertice(5, (26.704681673223963 ,  35.54304838007247)), Vertice(6, (10.31369713595877 ,  37.18167173541928)), Vertice(7, (40.86283402907582 ,  31.63313651370869)), Vertice(8, (35.686213695624595 ,  7.532421945058254)), Vertice(9, (5.472325177881782 ,  25.33350450976665))]
+        #self.genes= [Vertice(0, (13.799940281434441 ,  44.703335320869506)), Vertice(1, (4.929969173873872 ,  38.57085858780106)), Vertice(2, (13.272217821147253 ,  14.380034596293035)), Vertice(3, (12.886353710138925 ,  14.516591138225692)), Vertice(4, (4.637545238897739 ,  29.0476235222785)), Vertice(5, (26.704681673223963 ,  35.54304838007247)), Vertice(6, (10.31369713595877 ,  37.18167173541928)), Vertice(7, (40.86283402907582 ,  31.63313651370869)), Vertice(8, (35.686213695624595 ,  7.532421945058254)), Vertice(9, (5.472325177881782 ,  25.33350450976665))]
+        self.genes= grafo.vertices.copy()
         random.shuffle(self.genes)
         self._adaptacao= 0
     
@@ -46,10 +45,11 @@ class Individuo:
         peso= 0
         for i in range(tamGenes - 1):
             peso= peso + Vertice.distance(self.genes[i],self.genes[i+1])
+        peso= peso+ Vertice.distance(self.genes[tamGenes-1], self.genes[0])
         self.adaptacao= 1/peso
         
     def copy(self):
-        copia= Individuo()
+        copia= Individuo(Grafo())
         copia.genes= self.genes.copy()
         copia.idade= self.idade
         copia.adaptacao= self.adaptacao
@@ -60,9 +60,9 @@ class Populacao:
         self.individuos= []
         self.maisAdaptado= 0
         
-    def inicializaPopulacao(self):
+    def inicializaPopulacao(self, grafo):
         for i in range(tamPopulacao):
-            self.individuos.append(Individuo())
+            self.individuos.append(Individuo(grafo))
         
     def getMaisAdaptado(self):
         maxAdapt= -1
@@ -226,7 +226,7 @@ class AG:
             ponto2= random.randint(0, tamGenes)
             if ponto2>ponto1:
                 ponto1, ponto2= ponto2,ponto1
-            mutacao= random.random()>0.60
+            mutacao= (random.random() > (1 - (1/(math.log(tamGenes)))))
             if mutacao:
                 aux= []
                 for j in range(ponto1-ponto2):
@@ -241,7 +241,7 @@ class AG:
         velhos= self.populacao.getMaisVelhos()
         minimos= self.populacao.getMenosAdaptados()
         for i in range(0, math.floor(tamPopulacao/2)):
-            if self.populacao.individuos[velhos[i]].idade > 4:
+            if self.populacao.individuos[velhos[i]].idade > 5:
                 mortos.append(velhos[i])
             else:
                 ponto= i
@@ -257,13 +257,27 @@ class AG:
             self.populacao.individuos[mortos[i]]= self.filhos[i].copy()
             self.populacao.individuos[mortos[i]].idade= 0
     
+    
+grafo= Grafo()
+arquivo= open("input4.txt", "r")
+i= 0
+for linha in arquivo:
+    coords1= linha.split(",")
+    coords= (float(coords1[0]), float(coords1[1]))
+    grafo.add(Vertice(i, coords))
+    i= i+1
+    
+tamGenes= len(grafo.vertices)
+tamPopulacao= 2*tamGenes
+#mutacao= (1 - (1/(math.log(tamGenes))))
+
 demo= AG()
-demo.populacao.inicializaPopulacao()
+demo.populacao.inicializaPopulacao(grafo)
 demo.populacao.calculaAdaptacao()
 print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado)
 maior= demo.populacao.getMaisAdaptado().adaptacao
 genes= demo.populacao.getMaisAdaptado().genes
-for i in range(2000):
+for i in range(3000):
 #while demo.populacao.getMaisAdaptado().adaptacao < 0.0095:# or demo.geracaoAtual < 1500:
     demo.geracaoAtual= demo.geracaoAtual+1
     demo.populacao.envelhece()
@@ -281,8 +295,8 @@ print("Adaptacao: ",demo.populacao.getMaisAdaptado().adaptacao, "Custo:", 1/demo
 print("Genes: ")
 for i in range(tamGenes):
     print(demo.populacao.getMaisAdaptado().genes[i])
-print("Genes do mais adaptado: ")
-for i in range(tamGenes):
-    print(genes[i])
+#print("Genes do mais adaptado: ")
+#for i in range(tamGenes):
+#    print(genes[i])
     
     #8,2,3,9,4,1,6,0,5,7  -  0.01056... - 95.65
