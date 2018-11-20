@@ -2,6 +2,7 @@
 
 import math
 import random
+from matplotlib import pyplot as plt
 
 tamGenes= 0
 tamPopulacao= 0
@@ -10,26 +11,29 @@ class Vertice:
     def __init__(self, nome:int, coords:tuple):
         self.nome= nome
         self.x, self.y= coords
+        self.tipo= ""
 
     @staticmethod
     def distance(v1, v2):
-        return math.hypot(v2.x - v1.x, v2.y - v1.y)
+            return math.hypot(v2.x - v1.x, v2.y - v1.y)
     
     def __repr__(self):
         return f'{self.nome}'
 
-class Grafo:
+class GrafoCartesiano:
     def __init__(self):
         self.vertices= []
         
     def add(self, v):
         if isinstance(v, Vertice):
             self.vertices.append(v)
+            
     
    # @property
    # def vertices(self):
-   #     return self._vertices
+   #     return self._vertices        
     
+   
     
 class Individuo:
     def __init__(self, grafo):
@@ -49,7 +53,7 @@ class Individuo:
         self.adaptacao= 1/peso
         
     def copy(self):
-        copia= Individuo(Grafo())
+        copia= Individuo(GrafoCartesiano())
         copia.genes= self.genes.copy()
         copia.idade= self.idade
         copia.adaptacao= self.adaptacao
@@ -171,9 +175,9 @@ class AG:
         for i in range(0, tamPopulacao):
             soma= soma + self.populacao.individuos[i].adaptacao
         for i in range(0, math.floor(tamPopulacao/2)):
-            ponto= random.random()*tamPopulacao
-            while ponto > soma:
-                ponto= random.random()*tamPopulacao
+            ponto= random.random()#*tamPopulacao
+            #while ponto > soma:
+            #    ponto= random.random()*tamPopulacao
             listaPontos.append(ponto)
             
         listaPais= []
@@ -182,9 +186,12 @@ class AG:
             i= 0
             pai= -1
             while p < ponto:
-                p= p + self.populacao.individuos[i].adaptacao
+                p= p + self.populacao.individuos[i].adaptacao/soma
                 if any(p >= j for j in listaPontos) and not i in listaPais:
                     pai= i
+                elif any(p >= j for j in listaPontos) and i in listaPais:
+                    k= k-1
+                    continue
                 i= i+1
             listaPais.append(pai)
         self.filhos= []
@@ -205,6 +212,7 @@ class AG:
             for i in range(0, tamGenes):
                 flag= 0
                 for j in range(0, ponto2-ponto1):
+                    #print(n, i, j, k, "-", tamPopulacao/2, tamGenes, ponto1, ponto2, len(self.filhos))
                     if self.filhos[n+1].genes[i].nome == temp1[j].nome:
                         flag= 1
                 if flag < 1:
@@ -226,7 +234,13 @@ class AG:
             ponto2= random.randint(0, tamGenes)
             if ponto2>ponto1:
                 ponto1, ponto2= ponto2,ponto1
-            mutacao= (random.random() > (1 - (1/(math.log(tamGenes)))))
+            if tamPopulacao > 99:
+                chance= 0.99
+            #elif tamPopulacao < 40:
+             #   chance= 0.4
+            else:
+                chance= tamPopulacao/100
+            mutacao= random.random() > chance #1 - 1/math.log(tamPopulacao)
             if mutacao:
                 aux= []
                 for j in range(ponto1-ponto2):
@@ -241,7 +255,7 @@ class AG:
         velhos= self.populacao.getMaisVelhos()
         minimos= self.populacao.getMenosAdaptados()
         for i in range(0, math.floor(tamPopulacao/2)):
-            if self.populacao.individuos[velhos[i]].idade > 5:
+            if self.populacao.individuos[velhos[i]].idade > tamPopulacao:
                 mortos.append(velhos[i])
             else:
                 ponto= i
@@ -257,46 +271,58 @@ class AG:
             self.populacao.individuos[mortos[i]]= self.filhos[i].copy()
             self.populacao.individuos[mortos[i]].idade= 0
     
-    
-grafo= Grafo()
-arquivo= open("input4.txt", "r")
-i= 0
-for linha in arquivo:
-    coords1= linha.split(",")
-    coords= (float(coords1[0]), float(coords1[1]))
-    grafo.add(Vertice(i, coords))
-    i= i+1
-    
-tamGenes= len(grafo.vertices)
-tamPopulacao= 2*tamGenes
-#mutacao= (1 - (1/(math.log(tamGenes))))
 
-demo= AG()
-demo.populacao.inicializaPopulacao(grafo)
-demo.populacao.calculaAdaptacao()
-print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado)
-maior= demo.populacao.getMaisAdaptado().adaptacao
-genes= demo.populacao.getMaisAdaptado().genes
-for i in range(3000):
-#while demo.populacao.getMaisAdaptado().adaptacao < 0.0095:# or demo.geracaoAtual < 1500:
-    demo.geracaoAtual= demo.geracaoAtual+1
-    demo.populacao.envelhece()
-    demo.selecao()
-    demo.crossover()
-    demo.mutacao()
-    demo.adicionaFilhosMaisAdaptados()
-    demo.populacao.calculaAdaptacao()
-    print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado, "- Maior até agora: ", maior)
-    if demo.populacao.getMaisAdaptado().adaptacao > maior:
-        maior= demo.populacao.getMaisAdaptado().adaptacao
-        genes= demo.populacao.getMaisAdaptado().genes
-print("Solucao final na geracao ", demo.geracaoAtual)    
-print("Adaptacao: ",demo.populacao.getMaisAdaptado().adaptacao, "Custo:", 1/demo.populacao.getMaisAdaptado().adaptacao)
-print("Genes: ")
-for i in range(tamGenes):
-    print(demo.populacao.getMaisAdaptado().genes[i])
-#print("Genes do mais adaptado: ")
-#for i in range(tamGenes):
-#    print(genes[i])
+def inicializaCartesiano():    
+    grafo= GrafoCartesiano()
+    arquivo= open("input1.txt", "r")
+    i= 0
+    for linha in arquivo:
+        coords1= linha.split(",")
+        coords= (float(coords1[0]), float(coords1[1]))
+        grafo.add(Vertice(i, coords))
+        i= i+1
+    return grafo
     
+
+grafo= inicializaCartesiano()
+listaResults= []
+listaMaximos= []
+tamGenes= len(grafo.vertices)
+tamPopulacao= 2* math.floor(math.pow(math.log(tamGenes), 1.7))
+if math.floor(tamPopulacao/2) % 2 > 0 :
+    tamPopulacao= tamPopulacao+2
+#mutacao= (1 - (1/(math.log(tamGenes))))
+for n in range(0,30):
+    demo= AG()
+    demo.populacao.inicializaPopulacao(grafo)
+    demo.populacao.calculaAdaptacao()
+    #print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado)
+    maior= demo.populacao.getMaisAdaptado().adaptacao
+    genes= demo.populacao.getMaisAdaptado().genes
+    for i in range(30*math.floor(math.pow(tamPopulacao, 2.5))):
+    #while demo.populacao.getMaisAdaptado().adaptacao < 0.0095 :# or demo.geracaoAtual < 1500:
+        demo.geracaoAtual= demo.geracaoAtual+1
+        demo.populacao.envelhece()
+        demo.selecao()
+        demo.crossover()
+        demo.mutacao()
+        demo.adicionaFilhosMaisAdaptados()
+        demo.populacao.calculaAdaptacao()
+        #print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado, "- Maior até agora: ", maior)
+        if demo.populacao.getMaisAdaptado().adaptacao > maior:
+            maior= demo.populacao.getMaisAdaptado().adaptacao
+            genes= demo.populacao.getMaisAdaptado().genes
+    listaResults.append(demo.populacao.getMaisAdaptado().adaptacao)
+    listaMaximos.append(maior)
+    #print("Solucao final na geracao ", demo.geracaoAtual)    
+    print(n, "- Adaptacao: ",demo.populacao.getMaisAdaptado().adaptacao, "Custo:", 1/demo.populacao.getMaisAdaptado().adaptacao)
+    #print("Genes: ")
+    #for i in range(tamGenes):
+    #    print(demo.populacao.getMaisAdaptado().genes[i])
+    #print("Genes do mais adaptado: ")
+    #for i in range(tamGenes):
+    #    print(genes[i])
+        
+plt.plot(range(0,30), listaResults, 'bo', range(0,30), listaMaximos, 'k')
+
     #8,2,3,9,4,1,6,0,5,7  -  0.01056... - 95.65
