@@ -38,6 +38,7 @@ class Individuo:
         self.genes= []
         self.idade= 0
         self.genes= grafo.vertices.copy()
+        #Geração de uma solução inicial aleatória com shuffle
         random.shuffle(self.genes)
         self._adaptacao= 0
         
@@ -45,9 +46,11 @@ class Individuo:
     def calculaAdaptacao(self):
         self.adaptacao= 0
         peso= 0
+        #Calculo da soma de todos os pesos das arestas do ciclo
         for i in range(tamGenes - 1):
             peso= peso + Vertice.distance(self.genes[i],self.genes[i+1])
         peso= peso+ Vertice.distance(self.genes[tamGenes-1], self.genes[0])
+        #Quanto menor o custo total, maior a adaptação
         self.adaptacao= 1/peso
     
     #Retorna uma cópia do Indivíduo
@@ -86,9 +89,11 @@ class Populacao:
         maxAdapt2= 0
         for i in range(tamPopulacao):
             if self.individuos[i].adaptacao > self.individuos[maxAdapt1].adaptacao:
+                #Novo valor é maior que o maior anterior
                 maxAdapt2= maxAdapt1
                 maxAdapt1= i
             elif self.individuos[i].adaptacao > self.individuos[maxAdapt2].adaptacao:
+                #Novo valor está entre o maior e segundo maior anteriores
                 maxAdapt2= i
         return self.individuos[maxAdapt2]
     
@@ -187,20 +192,22 @@ class AG:
         listaPontos= []
         for i in range(0, tamPopulacao):
             soma= soma + self.populacao.individuos[i].adaptacao
+        #Geração de um ponto para cada indivíduo que será escolhido
         for i in range(0, math.floor(tamPopulacao/2)):
             ponto= random.random()
             listaPontos.append(ponto)
-            
+        
+        listaPontos.sort()
         listaPais= []
         for k in range(0,math.floor(tamPopulacao/2)):
             p= 0
             i= 0
             pai= -1
-            while p < ponto:
+            while p <= listaPontos[len(listaPontos)-1]:
                 p= p + self.populacao.individuos[i].adaptacao/soma
-                if any(p >= j for j in listaPontos) and not i in listaPais:
+                if p >= listaPontos[k] and not i in listaPais:
                     pai= i
-                elif any(p >= j for j in listaPontos) and i in listaPais:
+                elif p >= listaPontos[k] and i in listaPais:
                     k= k-1
                     continue
                 i= i+1
@@ -211,11 +218,13 @@ class AG:
     
     #Função de cross over, mistura os alelos dos descendentes gerados, dois a dois
     def crossover(self):
+        #4% de chance de clones dos pais
         if random.random()>0.96:
             return
         for n in range(0, math.floor(tamPopulacao/2), 2):
             temp1= []
             temp2= []
+            #Escolha dos pontos que delimitam a área de cross over
             ponto1= random.randint(0, math.floor(tamGenes/2))
             ponto2= random.randint(math.floor(tamGenes/2), tamGenes)
             for i in range(ponto1, ponto2):
@@ -288,7 +297,7 @@ class AG:
 #Função para ler a entrada de um arquivo
 def inicializaCartesiano():    
     grafo= GrafoCartesiano()
-    with open("input1.txt", "r") as arquivo:
+    with open("input2.txt", "r") as arquivo:
         i= 0
         for linha in arquivo:
             coords1= linha.split(",")
