@@ -7,29 +7,32 @@ import random
 tamGenes= 0
 tamPopulacao= 0
 
+#Classe do Vértice como pontos no plano cartesiano
 class Vertice:
     def __init__(self, nome:int, coords:tuple):
         self.nome= nome
         self.x, self.y= coords
         self.tipo= ""
 
+    #Cálculo da distancia entre dois Vértices - peso da aresta
     @staticmethod
     def distance(v1, v2):
             return math.hypot(v2.x - v1.x, v2.y - v1.y)
         
-    
     def __repr__(self):
         return f'{self.nome}'
 
+#Classe do Grafo
 class GrafoCartesiano:
     def __init__(self):
         self.vertices= []
         
+    #Adicionar um vértice ao Grafo    
     def add(self, v):
         if isinstance(v, Vertice):
             self.vertices.append(v)
    
-    
+#Classe do Cromossomo do algoritmo genético
 class Individuo:
     def __init__(self, grafo):
         self.genes= []
@@ -37,7 +40,8 @@ class Individuo:
         self.genes= grafo.vertices.copy()
         random.shuffle(self.genes)
         self._adaptacao= 0
-    
+        
+    #Cálculo da adaptação como o inverso do custo total do ciclo
     def calculaAdaptacao(self):
         self.adaptacao= 0
         peso= 0
@@ -45,7 +49,8 @@ class Individuo:
             peso= peso + Vertice.distance(self.genes[i],self.genes[i+1])
         peso= peso+ Vertice.distance(self.genes[tamGenes-1], self.genes[0])
         self.adaptacao= 1/peso
-        
+    
+    #Retorna uma cópia do Indivíduo
     def copy(self):
         copia= Individuo(GrafoCartesiano())
         copia.genes= self.genes.copy()
@@ -53,15 +58,18 @@ class Individuo:
         copia.adaptacao= self.adaptacao
         return copia
         
+#Classe da População do algoritmo genético
 class Populacao:
     def __init__(self):
         self.individuos= []
         self.maisAdaptado= 0
         
+    #Inicialização
     def inicializaPopulacao(self, grafo):
         for i in range(tamPopulacao):
             self.individuos.append(Individuo(grafo))
         
+    #Função que retorna o Indivíduo mais adaptado da População
     def getMaisAdaptado(self):
         maxAdapt= -1
         maxAdaptIndice= 0
@@ -71,7 +79,8 @@ class Populacao:
                 maxAdaptIndice= i
         self.maisAdaptado= self.individuos[maxAdaptIndice].adaptacao
         return self.individuos[maxAdaptIndice]
-    
+
+    #Função que retorna o segundo Indivíduo mais adaptado da População
     def getSegundoMaisAdaptado(self):
         maxAdapt1= 0
         maxAdapt2= 0
@@ -83,6 +92,7 @@ class Populacao:
                 maxAdapt2= i
         return self.individuos[maxAdapt2]
     
+    #Função que retorna uma lista da metade mais adaptada da População
     def getMaisAdaptados(self):
         lista= []
         menores= self.getMenosAdaptados()
@@ -95,6 +105,7 @@ class Populacao:
             maior= menores[0]
         return lista
     
+    #Função que retorna os índices dos dois Indivíduos menos adaptados da População
     def getDoisMenosAdaptados(self):
         minAdapt1= 0
         minAdapt2= 0
@@ -106,6 +117,7 @@ class Populacao:
                 minAdapt2= i
         return (minAdapt1, minAdapt2)
     
+    #Função que retorna os índices dos dois Indivíduos mais velhos da População
     def getDoisMaisVelhos(self):
         maxIdade1= 0
         maxIdade2= 0
@@ -118,6 +130,7 @@ class Populacao:
         self.maisVelho= self.individuos[maxIdade1].idade
         return (maxIdade1, maxIdade2)
     
+    #Função que retorna o índice do Indivíduo mais jovem da População
     def getMaisNovo(self):
         menor= 0
         for i in range(0, tamPopulacao):
@@ -125,6 +138,7 @@ class Populacao:
                 menor= i
         return menor
     
+    #Função que retorna uma lista de índices da metade mais velha da População
     def getMaisVelhos(self):
         lista= []
         menor= self.getMaisNovo()
@@ -136,7 +150,8 @@ class Populacao:
             lista.append(maior)
             maior= menor
         return lista
-    
+
+    #Função que retorna uma lista de índices da metade menos adaptada da População    
     def getMenosAdaptados(self):
         lista= []
         maior= self.individuos.index(self.getMaisAdaptado())
@@ -149,20 +164,24 @@ class Populacao:
             menor= maior
         return lista
     
+    #Função que calcula a adaptação de todos os Indivíduos da População
     def calculaAdaptacao(self):
         for i in range(tamPopulacao):
             self.individuos[i].calculaAdaptacao()
         self.getMaisAdaptado()  
         
+    #Função que aumenta a idade de todos os Indivíduos da População
     def envelhece(self):
         for i in range(tamPopulacao):
             self.individuos[i].idade= self.individuos[i].idade + 1
 
+#Classe do algoritmo genético
 class AG:
     def __init__(self):
         self.populacao= Populacao()
         self.geracaoAtual= 0
         
+    #Função de seleção, retorna metade da população, escolhida por roleta
     def selecao(self):
         soma= 0
         listaPontos= []
@@ -190,6 +209,7 @@ class AG:
         for i in range(0, math.floor(tamPopulacao/2)):
             self.filhos.append(self.populacao.individuos[listaPais[i]].copy())
     
+    #Função de cross over, mistura os alelos dos descendentes gerados, dois a dois
     def crossover(self):
         if random.random()>0.96:
             return
@@ -218,7 +238,8 @@ class AG:
             for i in range(ponto2, tamGenes):
                 self.filhos[n].genes[i]= temp2[k]
                 k= k+1
-        
+
+    #Função de mutação, que pode ou não permutar uma subsessão dos genes    
     def mutacao(self):
         for n in range(0, math.floor(tamPopulacao/2)):
             ponto1= random.randint(0, tamGenes)
@@ -238,6 +259,8 @@ class AG:
                 for j in range(ponto1-ponto2):
                     self.filhos[n].genes[ponto2+j]= aux[j]
     
+    #Função de mortalidade, que seleciona metade da população para ser 
+    #substituída na próxima geração, com base na sua idade e adaptação
     def mortalidade(self):
         mortos= []
         ponto= math.floor(tamPopulacao/2)
@@ -254,6 +277,7 @@ class AG:
                 
         return mortos
     
+    #Função que adiciona os novos Indivíduos à População
     def adicionaFilhosMaisAdaptados(self):
         mortos= self.mortalidade()
         for i in range(0, math.floor(tamPopulacao/2)):
@@ -261,7 +285,7 @@ class AG:
             self.populacao.individuos[mortos[i]]= self.filhos[i].copy()
             self.populacao.individuos[mortos[i]].idade= 0
     
-
+#Função para ler a entrada de um arquivo
 def inicializaCartesiano():    
     grafo= GrafoCartesiano()
     with open("input1.txt", "r") as arquivo:
@@ -272,8 +296,9 @@ def inicializaCartesiano():
             grafo.add(Vertice(i, coords))
             i= i+1
     return grafo
-    
 
+
+#Corpo principal do código    
 grafo= inicializaCartesiano()
 listaResults= []
 listaMaximos= []
