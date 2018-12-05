@@ -16,6 +16,7 @@ class Vertice:
     @staticmethod
     def distance(v1, v2):
             return math.hypot(v2.x - v1.x, v2.y - v1.y)
+        
     
     def __repr__(self):
         return f'{self.nome}'
@@ -240,6 +241,7 @@ class AG:
              #   chance= 0.4
             else:
                 chance= tamPopulacao/100
+                #chance= 0.8
             mutacao= random.random() > chance #1 - 1/math.log(tamPopulacao)
             if mutacao:
                 aux= []
@@ -262,6 +264,14 @@ class AG:
                 break
         for i in range(0, math.floor(tamPopulacao/2) - ponto):
             mortos.append(minimos[i])
+        #subtracao = [item for item in range(0, tamPopulacao) if item not in mortos]
+        #for i in subtracao:
+        #    if self.populacao.individuos[i].adaptacao < self.populacao.getMaisAdaptado().adaptacao:
+        #        return mortos
+        #for i in mortos:
+        #    if self.populacao.individuos[i].adaptacao < self.populacao.getMaisAdaptado().adaptacao:
+        #        mortos.remove(i)
+                
         return mortos
     
     def adicionaFilhosMaisAdaptados(self):
@@ -274,13 +284,13 @@ class AG:
 
 def inicializaCartesiano():    
     grafo= GrafoCartesiano()
-    arquivo= open("input1.txt", "r")
-    i= 0
-    for linha in arquivo:
-        coords1= linha.split(",")
-        coords= (float(coords1[0]), float(coords1[1]))
-        grafo.add(Vertice(i, coords))
-        i= i+1
+    with open("input1.txt", "r") as arquivo:
+        i= 0
+        for linha in arquivo:
+            coords1= linha.split(",")
+            coords= (float(coords1[0]), float(coords1[1]))
+            grafo.add(Vertice(i, coords))
+            i= i+1
     return grafo
     
 
@@ -288,26 +298,37 @@ grafo= inicializaCartesiano()
 listaResults= []
 listaMaximos= []
 tamGenes= len(grafo.vertices)
-tamPopulacao= 2* math.floor(math.pow(math.log(tamGenes), 1.7))
+tamPopulacao= 2* math.floor(math.pow(math.log(tamGenes), 2))
+
 if math.floor(tamPopulacao/2) % 2 > 0 :
     tamPopulacao= tamPopulacao+2
 #mutacao= (1 - (1/(math.log(tamGenes))))
-for n in range(0,30):
+for n in range(0, 1):
     demo= AG()
     demo.populacao.inicializaPopulacao(grafo)
     demo.populacao.calculaAdaptacao()
     #print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado)
     maior= demo.populacao.getMaisAdaptado().adaptacao
     genes= demo.populacao.getMaisAdaptado().genes
-    for i in range(30*math.floor(math.pow(tamPopulacao, 2.5))):
+    numGeracoes = 20*math.floor(math.pow(tamPopulacao, 2.7))
+    #if numGeracoes > 200000:
+    #    numGeracoes= 200000
+    #numGeracoes= 10000
+    for i in range(0, numGeracoes):
     #while demo.populacao.getMaisAdaptado().adaptacao < 0.0095 :# or demo.geracaoAtual < 1500:
         demo.geracaoAtual= demo.geracaoAtual+1
         demo.populacao.envelhece()
+        #print("Envelheceu -", i)
         demo.selecao()
+        #print("Selecionou -", i)
         demo.crossover()
+        #print("Crossover -", i)
         demo.mutacao()
+        #print("Mutação -", i)
         demo.adicionaFilhosMaisAdaptados()
+        #print("Adicionou filhos -", i)
         demo.populacao.calculaAdaptacao()
+        #print("Calculou adaptação -", i)
         #print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado, "- Maior até agora: ", maior)
         if demo.populacao.getMaisAdaptado().adaptacao > maior:
             maior= demo.populacao.getMaisAdaptado().adaptacao
@@ -323,6 +344,6 @@ for n in range(0,30):
     #for i in range(tamGenes):
     #    print(genes[i])
         
-plt.plot(range(0,30), listaResults, 'bo', range(0,30), listaMaximos, 'k')
+#plt.plot(range(0,30), listaResults, 'bo', range(0,30), listaMaximos, 'k')
 
     #8,2,3,9,4,1,6,0,5,7  -  0.01056... - 95.65
