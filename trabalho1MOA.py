@@ -2,7 +2,7 @@
 
 import math
 import random
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 tamGenes= 0
 tamPopulacao= 0
@@ -28,19 +28,12 @@ class GrafoCartesiano:
     def add(self, v):
         if isinstance(v, Vertice):
             self.vertices.append(v)
-            
-    
-   # @property
-   # def vertices(self):
-   #     return self._vertices        
-    
    
     
 class Individuo:
     def __init__(self, grafo):
         self.genes= []
         self.idade= 0
-        #self.genes= [Vertice(0, (13.799940281434441 ,  44.703335320869506)), Vertice(1, (4.929969173873872 ,  38.57085858780106)), Vertice(2, (13.272217821147253 ,  14.380034596293035)), Vertice(3, (12.886353710138925 ,  14.516591138225692)), Vertice(4, (4.637545238897739 ,  29.0476235222785)), Vertice(5, (26.704681673223963 ,  35.54304838007247)), Vertice(6, (10.31369713595877 ,  37.18167173541928)), Vertice(7, (40.86283402907582 ,  31.63313651370869)), Vertice(8, (35.686213695624595 ,  7.532421945058254)), Vertice(9, (5.472325177881782 ,  25.33350450976665))]
         self.genes= grafo.vertices.copy()
         random.shuffle(self.genes)
         self._adaptacao= 0
@@ -176,9 +169,7 @@ class AG:
         for i in range(0, tamPopulacao):
             soma= soma + self.populacao.individuos[i].adaptacao
         for i in range(0, math.floor(tamPopulacao/2)):
-            ponto= random.random()#*tamPopulacao
-            #while ponto > soma:
-            #    ponto= random.random()*tamPopulacao
+            ponto= random.random()
             listaPontos.append(ponto)
             
         listaPais= []
@@ -213,7 +204,6 @@ class AG:
             for i in range(0, tamGenes):
                 flag= 0
                 for j in range(0, ponto2-ponto1):
-                    #print(n, i, j, k, "-", tamPopulacao/2, tamGenes, ponto1, ponto2, len(self.filhos))
                     if self.filhos[n+1].genes[i].nome == temp1[j].nome:
                         flag= 1
                 if flag < 1:
@@ -237,12 +227,9 @@ class AG:
                 ponto1, ponto2= ponto2,ponto1
             if tamPopulacao > 99:
                 chance= 0.99
-            #elif tamPopulacao < 40:
-             #   chance= 0.4
             else:
                 chance= tamPopulacao/100
-                #chance= 0.8
-            mutacao= random.random() > chance #1 - 1/math.log(tamPopulacao)
+            mutacao= random.random() > chance 
             if mutacao:
                 aux= []
                 for j in range(ponto1-ponto2):
@@ -264,13 +251,6 @@ class AG:
                 break
         for i in range(0, math.floor(tamPopulacao/2) - ponto):
             mortos.append(minimos[i])
-        #subtracao = [item for item in range(0, tamPopulacao) if item not in mortos]
-        #for i in subtracao:
-        #    if self.populacao.individuos[i].adaptacao < self.populacao.getMaisAdaptado().adaptacao:
-        #        return mortos
-        #for i in mortos:
-        #    if self.populacao.individuos[i].adaptacao < self.populacao.getMaisAdaptado().adaptacao:
-        #        mortos.remove(i)
                 
         return mortos
     
@@ -298,52 +278,39 @@ grafo= inicializaCartesiano()
 listaResults= []
 listaMaximos= []
 tamGenes= len(grafo.vertices)
-tamPopulacao= 2* math.floor(math.pow(math.log(tamGenes), 2))
+if(tamGenes < 25):
+    tamPopulacao= 2* math.floor(math.pow(math.log(tamGenes), 1.6))
+else:
+    tamPopulacao= 2* math.floor(math.pow(math.log(tamGenes), 2))
+
 
 if math.floor(tamPopulacao/2) % 2 > 0 :
-    tamPopulacao= tamPopulacao+2
-#mutacao= (1 - (1/(math.log(tamGenes))))
-for n in range(0, 1):
-    demo= AG()
-    demo.populacao.inicializaPopulacao(grafo)
+    tamPopulacao= tamPopulacao+3
+
+demo= AG()
+demo.populacao.inicializaPopulacao(grafo)
+demo.populacao.calculaAdaptacao()
+maior= demo.populacao.getMaisAdaptado().adaptacao
+genes= demo.populacao.getMaisAdaptado().genes
+numGeracoes = 20*math.floor(math.pow(tamPopulacao, 2.7))
+for i in range(0, numGeracoes):
+    demo.geracaoAtual= demo.geracaoAtual+1
+    demo.populacao.envelhece()
+    demo.selecao()
+    demo.crossover()
+    demo.mutacao()
+    demo.adicionaFilhosMaisAdaptados()
     demo.populacao.calculaAdaptacao()
-    #print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado)
-    maior= demo.populacao.getMaisAdaptado().adaptacao
-    genes= demo.populacao.getMaisAdaptado().genes
-    numGeracoes = 20*math.floor(math.pow(tamPopulacao, 2.7))
-    #if numGeracoes > 200000:
-    #    numGeracoes= 200000
-    #numGeracoes= 10000
-    for i in range(0, numGeracoes):
-    #while demo.populacao.getMaisAdaptado().adaptacao < 0.0095 :# or demo.geracaoAtual < 1500:
-        demo.geracaoAtual= demo.geracaoAtual+1
-        demo.populacao.envelhece()
-        #print("Envelheceu -", i)
-        demo.selecao()
-        #print("Selecionou -", i)
-        demo.crossover()
-        #print("Crossover -", i)
-        demo.mutacao()
-        #print("Mutação -", i)
-        demo.adicionaFilhosMaisAdaptados()
-        #print("Adicionou filhos -", i)
-        demo.populacao.calculaAdaptacao()
-        #print("Calculou adaptação -", i)
-        #print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado, "- Maior até agora: ", maior)
-        if demo.populacao.getMaisAdaptado().adaptacao > maior:
-            maior= demo.populacao.getMaisAdaptado().adaptacao
-            genes= demo.populacao.getMaisAdaptado().genes
-    listaResults.append(demo.populacao.getMaisAdaptado().adaptacao)
-    listaMaximos.append(maior)
-    #print("Solucao final na geracao ", demo.geracaoAtual)    
-    print(n, "- Adaptacao: ",demo.populacao.getMaisAdaptado().adaptacao, "Custo:", 1/demo.populacao.getMaisAdaptado().adaptacao)
-    #print("Genes: ")
-    #for i in range(tamGenes):
-    #    print(demo.populacao.getMaisAdaptado().genes[i])
-    #print("Genes do mais adaptado: ")
-    #for i in range(tamGenes):
-    #    print(genes[i])
+    print("Geracao: ", demo.geracaoAtual, "- Mais Adaptado: ", demo.populacao.maisAdaptado, "- Maior até agora: ", maior)
+    if demo.populacao.getMaisAdaptado().adaptacao > maior:
+        maior= demo.populacao.getMaisAdaptado().adaptacao
+        genes= demo.populacao.getMaisAdaptado().genes
+listaResults.append(demo.populacao.getMaisAdaptado().adaptacao)
+listaMaximos.append(maior)
+print("Solucao final na geracao ", demo.geracaoAtual)    
+print("Adaptacao: ",maior, "Custo:", 1/maior)
+print("Genes: ")
+for i in range(tamGenes):
+    print(genes[i])
         
 #plt.plot(range(0,30), listaResults, 'bo', range(0,30), listaMaximos, 'k')
-
-    #8,2,3,9,4,1,6,0,5,7  -  0.01056... - 95.65
